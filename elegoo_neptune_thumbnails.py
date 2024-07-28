@@ -15,20 +15,7 @@ from PyQt6.QtWidgets import QApplication
 
 import lib_col_pic
 
-
-class SliceData:
-    """
-    Result data from slicing
-    """
-
-    def __init__(self, time_seconds: int, printer_model: str, model_height: float, filament_grams: float,
-                 filament_cost: float, currency: str = None):
-        self.printer_model: str = printer_model
-        self.time_seconds: int = time_seconds
-        self.model_height: float = model_height
-        self.filament_grams: float = filament_grams
-        self.filament_cost: float = filament_cost
-        self.currency: str = currency if currency else "€"
+from tools import SliceData, ThumbnailGenerator
 
 
 class ElegooNeptuneThumbnails:
@@ -64,6 +51,12 @@ class ElegooNeptuneThumbnails:
         self._gcode: str = args.gcode
         self._printer_model: str = args.printer
         self._currency: str = args.currency
+        self._corner_options = [
+            args.corner_top_left,
+            args.corner_top_right,
+            args.corner_bottom_left,
+            args.corner_bottom_right
+        ]
         self._thumbnail: QImage = self._get_q_image_thumbnail()
 
         # Get slice data
@@ -90,6 +83,10 @@ class ElegooNeptuneThumbnails:
         parser.add_argument("-c", "--currency", help="The currency to user (default is Euro)", type=str, required=False,
                             default="")
         parser.add_argument("gcode", help="Gcode path provided by OrcaSlicer", type=str)
+        parser.add_argument("--corner-top-left", choices=ThumbnailGenerator.available_options(), default="time_estimate")
+        parser.add_argument("--corner-top-right", choices=ThumbnailGenerator.available_options(), default="model_height")
+        parser.add_argument("--corner-bottom-left", choices=ThumbnailGenerator.available_options(), default="filament_grams_estimate")
+        parser.add_argument("--corner-bottom-right", choices=ThumbnailGenerator.available_options(), default="filament_cost_estimate")
         return parser.parse_args()
 
     def _get_base64_thumbnail(self, min_size: int = 300) -> str:
@@ -238,32 +235,9 @@ class ElegooNeptuneThumbnails:
         painter.end()
 
         # Generate option lines
-        lines: list[str] = []
-
-        # Add print time
-        if self._slice_data.time_seconds < 0:
-            lines.append(f"⧖ N/A")
-        else:
-            time_minutes: int = math.floor(self._slice_data.time_seconds / 60)
-            lines.append(f"⧖ {time_minutes // 60}:{time_minutes % 60:02d}h")
-
-        # Add model height
-        if self._slice_data.model_height < 0:
-            lines.append(f"⭱ N/A")
-        else:
-            lines.append(f"⭱ {round(self._slice_data.model_height, 2)}mm")
-
-        # Add filament grams
-        if self._slice_data.filament_grams < 0:
-            lines.append(f"⭗ N/A")
-        else:
-            lines.append(f"⭗ {round(self._slice_data.filament_grams)}g")
-
-        # Add filament cost
-        if self._slice_data.filament_cost < 0:
-            lines.append(f"⛁ N/A")
-        else:
-            lines.append(f"⛁ {round(self._slice_data.filament_cost, 2):.02f}{self._slice_data.currency}")
+        lines: list[str] = ThumbnailGenerator.generate_option_lines(
+            self._corner_options,
+            self._slice_data)
 
         # Add options
         app = QApplication(sys.argv)  # Trick to make QT not crash on painter.drawText (it needs a QApplication)
