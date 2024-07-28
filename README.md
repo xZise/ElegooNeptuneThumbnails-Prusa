@@ -104,8 +104,11 @@ Each corner can be set to one of the following values:
 * `nothing`: does not display anything in the corner
 * `time_estimate`: displays the time estimate
 * `filament_grams_estimate`: displays the filament usage estimate in grams
+* `layer_height`: displays the layer height in millimeters
 * `model_height`: displays the model height in millimeters
 * `filament_cost_estimate`: displays the filament cost estimate
+* `filament_meters_estimate`: displays the filament usage estimate in meters
+* `line_width`: displays the line width in millimeters
 
 ### Why does the model height show "N/A" when using PrusaSlicer?
 

@@ -7,14 +7,18 @@ class SliceData:
     Result data from slicing
     """
 
-    def __init__(self, time_seconds: int, printer_model: str, model_height: float, filament_grams: float,
-                 filament_cost: float, currency: str = None):
-        self.printer_model: str = printer_model
+    def __init__(self, printer_model: str, layer_height: float = 0.2, time_seconds: int = 3960, filament_meters: float = 3.9,
+                 filament_grams: float = 11.6, model_height: float = 48.0, filament_cost: float = 0.25,
+                 line_width: float = 0.4, currency: str = "€"):
+        self.printer_model = printer_model
+        self.layer_height: float = layer_height
         self.time_seconds: int = time_seconds
-        self.model_height: float = model_height
+        self.filament_meters: float = filament_meters
         self.filament_grams: float = filament_grams
+        self.model_height: float = model_height
         self.filament_cost: float = filament_cost
-        self.currency: str = currency if currency else "€"
+        self.line_width: float = line_width
+        self.currency: str = currency
 
 
 class ThumbnailGenerator:
@@ -34,6 +38,13 @@ class ThumbnailGenerator:
         return f"⭗ {round(slice_data.filament_grams)}g"
 
     @staticmethod
+    def _layer_height(slice_data: SliceData) -> str:
+        if slice_data.layer_height < 0:
+            return f"⧗ N/A"
+        else:
+            return f"⧗ {round(slice_data.layer_height, 2)}mm"
+
+    @staticmethod
     def _model_height(slice_data: SliceData) -> str:
         if slice_data.model_height < 0:
             return f"⭱ N/A"
@@ -43,6 +54,14 @@ class ThumbnailGenerator:
     @staticmethod
     def _filament_cost_estimate(slice_data: SliceData) -> str:
         return f"⛁ {round(slice_data.filament_cost, 2):.02f}{slice_data.currency}"
+
+    @staticmethod
+    def _filament_meters_estimate(slice_data: SliceData) -> str:
+        return f"⬌ {round(slice_data.filament_meters, 2):.02f}m"
+
+    @staticmethod
+    def _line_width(slice_data: SliceData) -> str:
+        return f"◯ {round(slice_data.line_width, 2):.02f}mm"
 
     @classmethod
     def available_options(cls) -> List[str]:
@@ -71,6 +90,9 @@ ThumbnailGenerator._corner_choices = {
     "nothing": ThumbnailGenerator._nothing,
     "time_estimate": ThumbnailGenerator._time_estimate,
     "filament_grams_estimate": ThumbnailGenerator._filament_grams_estimate,
+    "layer_height": ThumbnailGenerator._layer_height,
     "model_height": ThumbnailGenerator._model_height,
     "filament_cost_estimate": ThumbnailGenerator._filament_cost_estimate,
+    "filament_meters_estimate": ThumbnailGenerator._filament_meters_estimate,
+    "line_width": ThumbnailGenerator._line_width,
 }
